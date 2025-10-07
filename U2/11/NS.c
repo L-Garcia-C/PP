@@ -5,7 +5,7 @@
 #define NX 64
 #define NY 64
 #define NZ 64
-#define n 5000
+#define n 1000
 #define DX 0.01
 #define DY 0.01
 #define DZ 0.01
@@ -15,6 +15,7 @@
 double u[NX][NY][NZ], u_new[NX][NY][NZ];
 
 void inicializar(){
+    #pragma omp parallel for collapse(3)
     for (int i = 0; i < NX; i++) {
         for (int j = 0; j < NY; j++) {
             for (int k = 0; k < NZ; ++k){
@@ -29,7 +30,7 @@ void inicializar(){
 }
 
 void update() {
-    #pragma omp parallel for collapse(3)
+    #pragma omp parallel for collapse(3) schedule(guided, 4)
     for (int i = 1; i < NX - 1; ++i){
         for (int j = 1; j < NY - 1; ++j){
             for (int k = 1; k < NZ - 1; ++k) {
@@ -42,7 +43,7 @@ void update() {
         }
     }
     
-    #pragma omp parallel for collapse(3)
+    #pragma omp parallel for collapse(3) schedule(guided, 4)
     for (int i = 1; i < NX - 1; ++i){
         for (int j = 1; j < NY - 1; ++j){
             for (int k = 1; k < NZ - 1; ++k){
@@ -61,15 +62,6 @@ int main() {
     double end = omp_get_wtime();
 
     printf("Simulação concluída em %.9f segundos\n", end - start);
-
-    // Exporta uma fatia do centro para visualização (por exemplo, plano Z = NZ/2)
-    FILE *f = fopen("slice_xy.csv", "w");
-    for (int i = 0; i < NX; ++i) {
-        for (int j = 0; j < NY; ++j)
-            fprintf(f, "%f,", u[i][j][NZ/2]);
-        fprintf(f, "\n");
-    }
-    fclose(f);
 
     return 0;
 }
